@@ -22,7 +22,7 @@ def load_models():
     return xgb, iso
 
 @st.cache_data
-def load_sample_data(n=2000):
+def load_sample_data(n=20000):
     import glob
     csv_files = glob.glob("data/*.csv")
     if not csv_files:
@@ -30,7 +30,7 @@ def load_sample_data(n=2000):
         return pd.DataFrame()
     from src.preprocess import load_and_engineer, get_feature_cols
     df = load_and_engineer(csv_files[0])
-    return df.sample(n, random_state=42)
+    return df.sample(n, random_state=42).reset_index(drop=True)
 
 # ── Sidebar ────────────────────────────────────────────────────────────────
 st.sidebar.title("🔐 UPI Fraud Shield")
@@ -118,9 +118,13 @@ if mode == "Dashboard":
 elif mode == "Explain Transaction":
     st.title("🔍 Transaction Explainability (SHAP)")
 
-    idx = st.number_input("Select transaction index (0–1999)", 0, len(df)-1, 0)
-    row = df.iloc[[idx]]
-
+    idx = st.number_input(
+    f"Select transaction index (0–{len(df)-1})",
+    0,
+    len(df)-1,
+    0
+)
+    row = df.loc[[idx]]
     if models_loaded:
         from src.preprocess import get_feature_cols
         FEATURES = get_feature_cols()
@@ -164,7 +168,7 @@ elif mode == "Graph Analytics":
 
         raw_path = [f for f in __import__("glob").glob("data/*.csv")][0]
 
-        graph_n = min(len(df), 2000)
+        graph_n = min(len(df), 20000)
 
         raw = pd.read_csv(
             raw_path,

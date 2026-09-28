@@ -105,3 +105,108 @@ def load_lstm(model_dir: str = "models"):
     model = load_model(f"{model_dir}/lstm_model.h5")
     scaler = joblib.load(f"{model_dir}/lstm_scaler.pkl")
     return model, scaler
+
+def get_lstm_scores_for_dataframe(
+    model,
+    scaler,
+    df: pd.DataFrame,
+    raw_csv: str
+):
+    """
+    Generate one LSTM fraud score for every transaction.
+
+    The score for transaction i is based on the previous
+    SEQUENCE_LEN transactions of the same sender.
+    """
+
+    raw = pd.read_csv(
+        raw_csv,
+        usecols=["nameOrig"],
+        nrows=len(df)
+    )
+
+    work = df.copy()
+    work["nameOrig"] = raw["nameOrig"].values
+
+    # Preserve original transaction position
+    work["_original_index"] = np.arange(len(work))
+
+    # Sort by sender and time
+    work = work.sort_values(
+        ["nameOrig", "step"]
+    )
+
+    sequences = []
+    indices = []
+
+    for sender, grp in work.groupby("nameOrig"):
+
+        grp = grp.sort_values("step")
+
+        features = (
+            grp[SEQ_FEATURES]
+            .fillna(0)
+            .values
+        )
+
+        original_indices = (
+            grp["_original_index"]
+            .values
+        )
+
+        for i in range(len(grp)):
+
+            # Build history ending at current transaction
+            start = max(0, i - SEQUENCE_LEN + 1)
+
+            seq = features[start:i + 1]
+
+            # Pad beginning if necessary
+            if len(seq) < SEQUENCE_LEN:
+
+                padding = np.zeros(
+                    (
+                        SEQUENCE_LEN - len(seq),
+                        len(SEQ_FEATURES)
+                    )
+                )
+
+                seq = np.vstack(
+                    [padding, seq]
+                )
+
+            sequences.append(seq)
+            indices.append(original_indices[i])
+
+    X_seq = np.array(
+        sequences,
+        dtype=np.float32
+    )
+
+    indices = np.array(indices)
+
+    # Scale using the SAME scaler used during training
+    n, t, f = X_seq.shape
+
+    X_flat = X_seq.reshape(-1, f)
+
+    X_flat = scaler.transform(X_flat)
+
+    X_seq = X_flat.reshape(
+        n,
+        t,
+        f
+    )
+
+    # Predict
+    scores = model.predict(
+        X_seq,
+        verbose=0
+    ).flatten()
+
+    # Put scores back into original transaction order
+    ordered_scores = np.zeros(len(df))
+
+    ordered_scores[indices] = scores
+
+    return ordered_scores
