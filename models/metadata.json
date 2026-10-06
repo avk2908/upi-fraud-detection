@@ -1,0 +1,44 @@
+{
+  "model_version": "1.0.0",
+  "training_dataset": "PaySim synthetic mobile-money proxy",
+  "rows_used": 20000,
+  "split": {
+    "train": 14000,
+    "validation": 3000,
+    "test": 3000
+  },
+  "feature_version": "paysim_features_v1_18",
+  "sequence": {
+    "length": 5,
+    "features": 6
+  },
+  "seed": 42,
+  "trained_at_utc": "2026-09-29T16:00:58.463545+00:00",
+  "xgboost": {
+    "n_estimators": 80,
+    "max_depth": 4,
+    "learning_rate": 0.05
+  },
+  "isolation_forest": {
+    "n_estimators": 200,
+    "contamination": 0.02
+  },
+  "federated": {
+    "clients": 3,
+    "rounds": 5,
+    "local_epochs": 1,
+    "dirichlet_alpha": 0.3
+  },
+  "hgnn": {
+    "node_types": [
+      "account",
+      "transaction"
+    ],
+    "epochs": 30,
+    "hidden": 32,
+    "heads": [
+      2,
+      1
+    ]
+  }
+}

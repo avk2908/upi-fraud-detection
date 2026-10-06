@@ -1,0 +1,5 @@
+# Real-time demo application
+
+The FastAPI service replays the configured PaySim CSV as a demo event stream. It is not connected to a payment network or bank. Start the API with `python -m uvicorn backend.app:app --reload`; start the React/Vite client from `frontend/` with `npm install` and `npm run dev`. The UI subscribes to `/ws/transactions`; simulator controls use `/api/simulator/start`, `/stop` and `/config`. LSTM cold-starts repeat the sender's first observed sequence event until a five-event context is available and are marked in each event. The HGNN scores a rolling graph of recent replayed transactions; this demo context differs from the transductive training graph, so online graph calibration remains a limitation.
+
+REST endpoints include `/api/health`, `/api/models`, `/api/metrics`, `/api/transactions`, `/api/transactions/{id}`, `/api/transactions/score`, and `/api/explanations/{id}`. Compatible XGBoost, Isolation Forest, LSTM and HGNN artifacts are used when present. Model failures are surfaced; degraded scoring uses only available model components and must not be compared with full fusion.

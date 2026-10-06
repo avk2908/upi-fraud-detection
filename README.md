@@ -1,356 +1,65 @@
-# 🔐 UPI Fraud Shield
+# Explainable Federated Graph-Enhanced Fraud Detection
 
-## Predictive Cognitive Fraud Prevention for UPI-Style Payment Ecosystems
+Research MVP for fraud analysis on PaySim, a **synthetic mobile-money dataset used as a UPI-like proxy**. It is not real UPI data and does not contain real UPI IDs, devices, merchants, or customer identities. The web app replays PaySim rows; it is not connected to a bank or payment rail.
 
-An advanced multi-layer fraud detection system built using Machine Learning, Deep Learning, Graph Neural Networks, and Explainable AI to detect suspicious UPI-style financial transactions in real time.
+## Architecture
 
-This project combines behavioral analytics, anomaly detection, sequential intelligence, graph-based fraud ring detection, and explainable AI into a unified fraud prevention framework.
+- `src/`: preprocessing, XGBoost and Isolation Forest, LSTM/FedAvg, heterogeneous account/transaction GNN, risk fusion and evaluation.
+- `backend/`: FastAPI REST/WebSocket API, model health, scoring, and sequential PaySim replay.
+- `frontend/`: React, TypeScript, and Vite fraud-intelligence interface with six workspace pages.
+- `scripts/`: paper consistency scan and generated research tables.
+- `docs/`: experiment protocol, paper guidance, audit and limitations.
 
----
+The behavioral matrix has 18 features. The temporal model consumes length-5 sequences with six features. The graph has account nodes (7 features), transaction nodes (18 features), and sends/sent_by/receives/received_by relations. The fusion equation is `0.40 B + 0.15 A + 0.25 S + 0.20 G`; FedAvg trains the LSTM and is not a score.
 
-# 🚀 Project Overview
+## Setup
 
-Digital payment systems such as UPI are experiencing rapid growth, but with increasing transaction volume comes increasingly sophisticated fraud.
+Use Python 3.10 or 3.11 for compatibility with the pinned ML stack.
 
-Traditional rule-based systems struggle to detect:
-
-* evolving fraud patterns
-* coordinated fraud rings
-* behavioral anomalies
-* sequential fraud escalation
-* previously unseen attack patterns
-
-This project addresses those challenges using a hybrid AI architecture that integrates:
-
-* XGBoost for behavioral fraud classification
-* Isolation Forest for anomaly detection
-* LSTM for sequential transaction intelligence
-* Graph Attention Networks (GNN/GAT) for fraud ring detection
-* SHAP for explainable AI
-* Streamlit for interactive fraud monitoring dashboards
-
----
-
-# 🧠 Key Features
-
-✅ Multi-layer fraud intelligence pipeline
-✅ Real-time transaction risk scoring
-✅ Hybrid supervised + unsupervised learning
-✅ Sequential fraud pattern detection using LSTM
-✅ Graph Neural Network for fraud ring detection
-✅ Explainable AI using SHAP
-✅ Interactive Streamlit dashboard
-✅ Risk threshold tuning and analyst simulation
-✅ Fraud analytics and visualization
-
----
-
-# 🏗️ System Architecture
-
-```text
-                 ┌────────────────────┐
-                 │   PaySim Dataset   │
-                 └─────────┬──────────┘
-                           │
-                 ┌─────────▼──────────┐
-                 │ Preprocessing &    │
-                 │ Feature Engineering│
-                 └─────────┬──────────┘
-                           │
-      ┌────────────────────┼────────────────────┐
-      │                    │                    │
-┌─────▼─────┐      ┌───────▼───────┐    ┌──────▼──────┐
-│ XGBoost   │      │ Isolation     │    │ LSTM Model  │
-│ Behavioral│      │ Forest        │    │ Sequential  │
-│ Engine    │      │ Anomaly Layer │    │ Intelligence│
-└─────┬─────┘      └───────┬───────┘    └──────┬──────┘
-      │                    │                    │
-      └────────────────────┼────────────────────┘
-                           │
-                 ┌─────────▼──────────┐
-                 │ Graph Neural       │
-                 │ Network (GAT)      │
-                 └─────────┬──────────┘
-                           │
-                 ┌─────────▼──────────┐
-                 │ Risk Fusion Engine │
-                 └─────────┬──────────┘
-                           │
-                 ┌─────────▼──────────┐
-                 │ SHAP Explainability│
-                 └─────────┬──────────┘
-                           │
-                 ┌─────────▼──────────┐
-                 │ Streamlit Dashboard│
-                 └────────────────────┘
-```
-
----
-
-# 📂 Project Structure
-
-```text
-upi_fraud_detection/
-│
-├── data/
-│   └── PaySim Dataset CSV
-│
-├── src/
-│   ├── preprocess.py
-│   ├── behavioral_engine.py
-│   ├── lstm_model.py
-│   ├── gnn_model.py
-│   ├── risk_fusion.py
-│   └── explainability.py
-│
-├── dashboard/
-│   └── app.py
-│
-├── models/
-├── outputs/
-├── train_pipeline.py
-├── requirements.txt
-└── README.md
-```
-
----
-
-# ⚙️ Tech Stack
-
-| Category             | Technologies                |
-| -------------------- | --------------------------- |
-| Programming Language | Python                      |
-| Data Processing      | Pandas, NumPy               |
-| Machine Learning     | Scikit-learn, XGBoost       |
-| Deep Learning        | TensorFlow, Keras           |
-| Graph Learning       | PyTorch Geometric           |
-| Explainable AI       | SHAP                        |
-| Visualization        | Plotly, Matplotlib, Seaborn |
-| Dashboard            | Streamlit                   |
-| Graph Analytics      | NetworkX                    |
-
----
-
-# 📊 Dataset
-
-### PaySim Dataset
-
-This project uses the PaySim synthetic financial transaction dataset from Kaggle.
-
-Dataset Link:
-[https://www.kaggle.com/datasets/ealaxi/paysim1](https://www.kaggle.com/datasets/ealaxi/paysim1)
-
-The dataset simulates mobile money transactions and includes:
-
-* transaction type
-* sender/receiver balances
-* transaction amounts
-* fraud labels
-* account behavior patterns
-
----
-
-# 🔍 Fraud Detection Pipeline
-
-## Phase 1 — Preprocessing & Feature Engineering
-
-Engineered fraud-sensitive features such as:
-
-* balance mismatch signals
-* transaction velocity
-* amount deviation
-* transaction gaps
-* receiver novelty
-* beneficiary concentration
-
----
-
-## Phase 2 — Behavioral Fraud Engine
-
-### XGBoost
-
-Learns transaction-level fraud behavior patterns.
-
-### Isolation Forest
-
-Detects anomalous or previously unseen suspicious behavior.
-
----
-
-## Phase 3 — Sequential Intelligence (LSTM)
-
-Captures temporal transaction patterns and sequential fraud escalation.
-
-Example:
-
-```text
-Txn1 → Txn2 → Txn3 → Suspicious Escalation
-```
-
----
-
-## Phase 4 — Graph Neural Network (GAT)
-
-Models transaction ecosystems as graphs:
-
-* Nodes → accounts/users
-* Edges → transactions
-
-Detects:
-
-* fraud rings
-* mule accounts
-* coordinated attacks
-* suspicious transaction hubs
-
-This is the core research contribution of the project.
-
----
-
-## Phase 5 — Risk Fusion Engine
-
-Combines all module outputs into a unified fraud risk score.
-
-```text
-Final Risk = Behavioral + Anomaly + Sequential + Relational
-```
-
----
-
-## Phase 6 — Explainable AI
-
-SHAP explanations provide feature-level transparency for every fraud prediction.
-
-This helps analysts understand:
-
-* why a transaction was flagged
-* which features contributed most
-* how risk was determined
-
----
-
-# 📈 Dashboard Features
-
-The Streamlit dashboard provides:
-
-* fraud monitoring KPIs
-* risk score visualization
-* transaction-level explainability
-* graph analytics
-* threshold tuning
-* suspicious transaction exploration
-
----
-
-# 🖥️ Installation
-
-## 1. Clone Repository
-
-```bash
-git clone https://github.com/yourusername/upi-fraud-detection.git
-cd upi-fraud-detection
-```
-
----
-
-## 2. Create Virtual Environment
-
-### Windows
-
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-### Linux / macOS
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
----
-
-## 3. Install Dependencies
-
-```bash
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
----
+Place the PaySim CSV at `data/PS_20174392719_1491204439457_log.csv` or set `PAYSIM_CSV`. The repository's configured dataset path uses the first 20,000 rows for the research MVP. To train, run `python train_pipeline.py`; outputs are written to `models/` and `results/`. The primary split is seed-42 stratified 70/15/15 and is persisted in `results/splits.csv`. Validation selects the decision threshold; test is final evaluation only.
 
-## 4. Download Dataset
+## Full-stack demo
 
-Download the PaySim dataset and place the CSV inside:
+Start the backend:
 
-```text
-data/
+```powershell
+python -m uvicorn backend.app:app --reload
 ```
 
----
+Start the frontend in another terminal:
 
-# ▶️ Running The Project
-
-## Train Models
-
-```bash
-python train_pipeline.py
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
----
+Open the Vite URL (normally `http://localhost:5173`). The API is available at `http://localhost:8000/docs`; the UI receives scored replay events through `/ws/transactions`. The Live Monitor supports replay at 0.5x, 1x, 2x, and 5x. The Payment Simulator submits six controlled scenarios to the actual inference pipeline. Transactions and threshold alerts persist in `outputs/fraud_monitor.sqlite3`. The interface displays unavailable model components and degraded scoring explicitly; it never substitutes random scores.
 
-## Launch Dashboard
+To check the frontend types and production bundle:
 
-```bash
-streamlit run dashboard/app.py
+```powershell
+cd frontend
+npm run typecheck
+npm run build
 ```
 
-Dashboard opens at:
+## Evaluation and reports
 
-```text
-http://localhost:8501
+```powershell
+pytest
+python scripts/generate_paper_tables.py
+python scripts/check_paper_consistency.py
 ```
 
----
+The training pipeline writes split, evaluation, baseline, ablation, stress, federated, and overhead CSVs under `results/`. The reporting scripts generate `results/paper_tables.md`, `results/paper_tables.csv`, and `results/paper_consistency_report.txt`. Existing results and model files are not valid for revised code until the pipeline is rerun.
 
-# 📸 Sample Dashboard Modules
+## Limitations
 
-* Fraud Monitoring Dashboard
-* Risk Score Distribution
-* Transaction Explainability
-* Graph Analytics
-* Mule Account Detection
-
----
-
----
-
-# 🔮 Future Scope
-
-* Real-time streaming fraud detection
-* Kafka-based event pipelines
-* Live API integration
-* Reinforcement learning for adaptive fraud response
-* Federated learning for privacy-preserving fraud detection
-* Advanced graph embedding techniques
-* Cloud deployment and scalable microservices
-
----
-
-# 📚 References
-
-* XGBoost Documentation
-* TensorFlow Documentation
-* PyTorch Geometric Documentation
-* SHAP Explainability
-* PaySim Dataset Research Paper
-
----
-
-# 👨‍💻 Author
-
-Amithava Varma
-AI Engineering Student
-Focused on AI Systems, Machine Learning, Fraud Intelligence, and Real-World AI Applications.
-
----
+The graph experiment is transductive. The FedAvg setup is a local protocol simulation, not a privacy guarantee. Stress tests are dataset-derived proxies, not adaptive attacks. SHAP is decision-support, not proof of regulatory compliance. See [the experiment protocol](docs/EXPERIMENT_PROTOCOL.md), [application guide](docs/REALTIME_APPLICATION.md), and [limitations](docs/LIMITATIONS.md).

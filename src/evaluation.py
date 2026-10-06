@@ -1,235 +1,136 @@
 import os
+import time
+import json
 import numpy as np
 import pandas as pd
 
 from sklearn.metrics import (
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
-    average_precision_score,
-    confusion_matrix
+    precision_score, recall_score, f1_score, roc_auc_score,
+    average_precision_score, confusion_matrix, balanced_accuracy_score
 )
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+import xgboost as xgb
 
 
-def evaluate_scores(
-    y_true,
-    scores,
-    threshold=0.5,
-    model_name="Model"
-):
-    """
-    Evaluate a fraud score against ground-truth labels.
-
-    Parameters
-    ----------
-    y_true : array-like
-        True fraud labels (0/1)
-
-    scores : array-like
-        Continuous fraud/risk scores in [0,1]
-
-    threshold : float
-        Threshold used to convert score into fraud/not-fraud
-
-    model_name : str
-        Name shown in evaluation table
-    """
-
+def metric_row(y_true, scores, threshold=0.5, name="model"):
     y_true = np.asarray(y_true).astype(int)
     scores = np.asarray(scores).astype(float)
-
-    predictions = (scores >= threshold).astype(int)
-
-    precision = precision_score(
-        y_true,
-        predictions,
-        zero_division=0
-    )
-
-    recall = recall_score(
-        y_true,
-        predictions,
-        zero_division=0
-    )
-
-    f1 = f1_score(
-        y_true,
-        predictions,
-        zero_division=0
-    )
-
-    try:
-        roc_auc = roc_auc_score(y_true, scores)
-    except ValueError:
-        roc_auc = np.nan
-
-    try:
-        pr_auc = average_precision_score(y_true, scores)
-    except ValueError:
-        pr_auc = np.nan
-
-    tn, fp, fn, tp = confusion_matrix(
-        y_true,
-        predictions,
-        labels=[0, 1]
-    ).ravel()
+    pred = (scores >= threshold).astype(int)
 
     return {
-        "Configuration": model_name,
-        "Precision": precision,
-        "Recall": recall,
-        "F1": f1,
-        "ROC-AUC": roc_auc,
-        "PR-AUC": pr_auc,
-        "TP": tp,
-        "FP": fp,
-        "TN": tn,
-        "FN": fn,
-        "Threshold": threshold
+        "Model": name,
+        "Precision": precision_score(y_true, pred, zero_division=0),
+        "Recall": recall_score(y_true, pred, zero_division=0),
+        "F1": f1_score(y_true, pred, zero_division=0),
+        "ROC-AUC": roc_auc_score(y_true, scores),
+        "PR-AUC": average_precision_score(y_true, scores),
+        "Balanced-Accuracy": balanced_accuracy_score(y_true, pred),
+        "TN": int(confusion_matrix(y_true, pred, labels=[0, 1])[0, 0]),
+        "FP": int(confusion_matrix(y_true, pred, labels=[0, 1])[0, 1]),
+        "FN": int(confusion_matrix(y_true, pred, labels=[0, 1])[1, 0]),
+        "TP": int(confusion_matrix(y_true, pred, labels=[0, 1])[1, 1]),
     }
 
 
-def evaluate_all(
-    y_true,
-    xgb_scores,
-    iso_scores,
-    lstm_scores,
-    gnn_scores,
-    final_scores,
-    threshold=0.5
-):
+def best_f1_threshold(y_true, scores):
+    from sklearn.metrics import precision_recall_curve
+    p, r, t = precision_recall_curve(y_true, scores)
+    if len(t) == 0:
+        return 0.5
+    f1 = 2 * p[:-1] * r[:-1] / (p[:-1] + r[:-1] + 1e-12)
+    return float(t[np.argmax(f1)])
+
+
+def evaluate_scores(y_true, scores, threshold=None, name="model"):
+    threshold = (
+        best_f1_threshold(y_true, scores)
+        if threshold is None else threshold
+    )
+    row = metric_row(y_true, scores, threshold, name)
+    row["Threshold"] = threshold
+    return row
+
+
+def evaluate_strong_baselines(X_train, y_train, X_test, y_test, X_val=None, y_val=None):
     """
-    Evaluate all individual and combined layers.
+    Same train/test split for all baselines.
+    SMOTE is intentionally NOT applied here so the comparison is clean.
+    Class weighting is used for supervised baselines.
     """
+    models = {
+        "Logistic Regression": make_pipeline(
+            StandardScaler(),
+            LogisticRegression(
+                max_iter=1000, class_weight="balanced", random_state=42
+            )
+        ),
+        "Random Forest": RandomForestClassifier(
+            n_estimators=300,
+            max_depth=12,
+            class_weight="balanced_subsample",
+            random_state=42,
+            n_jobs=1,
+        ),
+        "XGBoost": xgb.XGBClassifier(
+            n_estimators=80,
+            max_depth=4,
+            learning_rate=0.05,
+            scale_pos_weight=(
+                (y_train == 0).sum() / max((y_train == 1).sum(), 1)
+            ),
+            eval_metric="aucpr",
+            random_state=42,
+            n_jobs=1,
+        ),
+    }
 
-    results = []
+    rows = []
+    for name, model in models.items():
+        start = time.perf_counter()
+        model.fit(X_train, y_train)
+        val_scores = model.predict_proba(X_val)[:, 1] if X_val is not None else None
+        threshold = best_f1_threshold(y_val, val_scores) if val_scores is not None else 0.5
+        scores = model.predict_proba(X_test)[:, 1]
+        elapsed = time.perf_counter() - start
 
-    # ---------------------------------------------------------
-    # 1. XGBoost
-    # ---------------------------------------------------------
-    results.append(
-        evaluate_scores(
-            y_true,
-            xgb_scores,
-            threshold,
-            "XGBoost"
-        )
-    )
+        row = evaluate_scores(y_test, scores, threshold=threshold, name=name)
+        row["TrainSeconds"] = elapsed
+        rows.append(row)
 
-    # ---------------------------------------------------------
-    # 2. Isolation Forest
-    # ---------------------------------------------------------
-    results.append(
-        evaluate_scores(
-            y_true,
-            iso_scores,
-            threshold,
-            "Isolation Forest"
-        )
-    )
-
-    # ---------------------------------------------------------
-    # 3. XGBoost + Isolation Forest
-    # ---------------------------------------------------------
-    behavioral_scores = (
-        0.70 * xgb_scores +
-        0.30 * iso_scores
-    )
-
-    results.append(
-        evaluate_scores(
-            y_true,
-            behavioral_scores,
-            threshold,
-            "XGBoost + Isolation Forest"
-        )
-    )
-
-    # ---------------------------------------------------------
-    # 4. XGBoost + IF + LSTM
-    # ---------------------------------------------------------
-    sequential_scores = (
-        0.55 * xgb_scores +
-        0.20 * iso_scores +
-        0.25 * lstm_scores
-    )
-
-    results.append(
-        evaluate_scores(
-            y_true,
-            sequential_scores,
-            threshold,
-            "XGBoost + IF + LSTM"
-        )
-    )
-
-    # ---------------------------------------------------------
-    # 5. Full Fusion
-    # ---------------------------------------------------------
-    results.append(
-        evaluate_scores(
-            y_true,
-            final_scores,
-            threshold,
-            "Full Fusion"
-        )
-    )
-
-    results_df = pd.DataFrame(results)
-
-    # Round only for presentation
-    metric_cols = [
-        "Precision",
-        "Recall",
-        "F1",
-        "ROC-AUC",
-        "PR-AUC"
-    ]
-
-    results_df[metric_cols] = results_df[metric_cols].round(4)
-
-    return results_df
+    return pd.DataFrame(rows)
 
 
-def save_evaluation_table(
-    results_df,
-    output_dir="results"
-):
+def run_ablation(y_true, score_map, threshold=0.5):
     """
-    Save evaluation results in CSV and Excel-compatible format.
+    score_map keys should include:
+      full, no_anomaly, no_temporal, no_graph, centralized
     """
+    rows = []
+    labels = {
+        "full": "Full: XGB + IF + LSTM(FedAvg) + HGNN",
+        "no_anomaly": "Ablation: - Isolation Forest",
+        "no_temporal": "Ablation: - LSTM",
+        "no_graph": "Ablation: - HGNN",
+        "centralized": "Ablation: - Federated Training",
+    }
+    for key, label in labels.items():
+        if key in score_map:
+            rows.append(
+                evaluate_scores(
+                    y_true, score_map[key], threshold=(threshold.get(key, 0.5) if isinstance(threshold, dict) else threshold), name=label
+                )
+            )
+    return pd.DataFrame(rows)
 
-    os.makedirs(output_dir, exist_ok=True)
 
-    csv_path = os.path.join(
-        output_dir,
-        "evaluation_results.csv"
-    )
-
-    results_df.to_csv(
-        csv_path,
-        index=False
-    )
-
-    print("\n==============================================")
-    print("FINAL EVALUATION RESULTS")
-    print("==============================================")
-
-    print(
-        results_df[
-            [
-                "Configuration",
-                "Precision",
-                "Recall",
-                "F1",
-                "ROC-AUC",
-                "PR-AUC"
-            ]
-        ].to_string(index=False)
-    )
-
-    print("\nSaved to:")
-    print(csv_path)
-
+def save_results(df, path="results"):
+    os.makedirs(path, exist_ok=True)
+    csv_path = os.path.join(path, "evaluation_results.csv")
+    json_path = os.path.join(path, "evaluation_results.json")
+    df.to_csv(csv_path, index=False)
+    df.to_json(json_path, orient="records", indent=2)
+    print(f"[Evaluation] Saved {csv_path}")
     return csv_path

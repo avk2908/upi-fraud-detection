@@ -1,0 +1,2 @@
+Model,Precision,Recall,F1,ROC-AUC,PR-AUC,Balanced-Accuracy,TN,FP,FN,TP,Threshold,train_rows,validation_rows,future_test_rows
+Chronological XGBoost,0.000667334000667334,1.0,0.001333777925975325,1.0,1.0,0.5005003335557038,3,2995,0,2,0.009108229540288448,14000,3000,3000

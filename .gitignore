@@ -15,13 +15,21 @@ data/*.csv
 models/*.pkl
 models/*.h5
 models/*.pt
+models/**/*.pkl
+models/**/*.h5
+models/**/*.pt
 
 # Outputs
 outputs/*.png
 outputs/*.jpg
+outputs/*.sqlite3
 
 # VS Code
 .vscode/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+models/.pyg_cache/
 
 # OS files
 .DS_Store

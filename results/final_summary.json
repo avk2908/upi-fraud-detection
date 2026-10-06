@@ -1,0 +1,402 @@
+{
+  "dataset": "PaySim synthetic mobile-money proxy",
+  "rows": 20000,
+  "split": {
+    "train": 14000,
+    "validation": 3000,
+    "test": 3000
+  },
+  "threshold": 0.7118334991725848,
+  "threshold_selected_on": "validation",
+  "full_model": {
+    "Model": "Full: XGB + IF + LSTM(FedAvg) + HGNN",
+    "Precision": 1.0,
+    "Recall": 0.3333333333333333,
+    "F1": 0.5,
+    "ROC-AUC": 0.9994701026327533,
+    "PR-AUC": 0.8847666222666222,
+    "Balanced-Accuracy": 0.6666666666666666,
+    "TN": 2988,
+    "FP": 0,
+    "FN": 8,
+    "TP": 4,
+    "Threshold": 0.7118334991725848
+  },
+  "limitations": [
+    "transductive HGNN",
+    "FedAvg simulated on one machine",
+    "PaySim is not actual UPI data",
+    "chronological scores use an XGBoost-only secondary model"
+  ],
+  "strong_baselines": [
+    {
+      "Model": "Logistic Regression",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "ROC-AUC": 0.9274040606871932,
+      "PR-AUC": 0.0880298017526756,
+      "Balanced-Accuracy": 0.5,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 12,
+      "TP": 0,
+      "Threshold": 0.9999999988190212,
+      "TrainSeconds": 0.0764974000048823
+    },
+    {
+      "Model": "Random Forest",
+      "Precision": 1.0,
+      "Recall": 0.8333333333333334,
+      "F1": 0.9090909090909092,
+      "ROC-AUC": 1.0,
+      "PR-AUC": 1.0,
+      "Balanced-Accuracy": 0.9166666666666669,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 2,
+      "TP": 10,
+      "Threshold": 0.5933333333333334,
+      "TrainSeconds": 3.922910099994624
+    },
+    {
+      "Model": "XGBoost",
+      "Precision": 1.0,
+      "Recall": 1.0,
+      "F1": 1.0,
+      "ROC-AUC": 1.0,
+      "PR-AUC": 1.0,
+      "Balanced-Accuracy": 1.0,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 0,
+      "TP": 12,
+      "Threshold": 0.9312365055084229,
+      "TrainSeconds": 0.2180845999973826
+    },
+    {
+      "Model": "Full fused model",
+      "Precision": 1.0,
+      "Recall": 0.3333333333333333,
+      "F1": 0.5,
+      "ROC-AUC": 0.9994701026327532,
+      "PR-AUC": 0.8847666222666222,
+      "Balanced-Accuracy": 0.6666666666666666,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 8,
+      "TP": 4,
+      "Threshold": 0.7118334991725848,
+      "TrainSeconds": null
+    },
+    {
+      "Model": "Isolation Forest only",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "ROC-AUC": 0.5287539045069165,
+      "PR-AUC": 0.0042837845826247,
+      "Balanced-Accuracy": 0.4713855421686747,
+      "TN": 2817,
+      "FP": 171,
+      "FN": 12,
+      "TP": 0,
+      "Threshold": 0.6037956703037952,
+      "TrainSeconds": null
+    },
+    {
+      "Model": "LSTM only (FedAvg)",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "ROC-AUC": 0.598086791610888,
+      "PR-AUC": 0.0262084912900918,
+      "Balanced-Accuracy": 0.4994979919678715,
+      "TN": 2985,
+      "FP": 3,
+      "FN": 12,
+      "TP": 0,
+      "Threshold": 0.4774109721183777,
+      "TrainSeconds": null
+    },
+    {
+      "Model": "HGNN only",
+      "Precision": 0.0172413793103448,
+      "Recall": 0.5,
+      "F1": 0.0333333333333333,
+      "ROC-AUC": 0.7230031236055333,
+      "PR-AUC": 0.0119398586825567,
+      "Balanced-Accuracy": 0.6927710843373494,
+      "TN": 2646,
+      "FP": 342,
+      "FN": 6,
+      "TP": 6,
+      "Threshold": 1.0,
+      "TrainSeconds": null
+    }
+  ],
+  "ablations": [
+    {
+      "Model": "Full: XGB + IF + LSTM(FedAvg) + HGNN",
+      "Precision": 1.0,
+      "Recall": 0.3333333333333333,
+      "F1": 0.5,
+      "ROC-AUC": 0.9994701026327532,
+      "PR-AUC": 0.8847666222666222,
+      "Balanced-Accuracy": 0.6666666666666666,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 8,
+      "TP": 4,
+      "Threshold": 0.7118334991725848
+    },
+    {
+      "Model": "Ablation: - Isolation Forest",
+      "Precision": 1.0,
+      "Recall": 0.4166666666666667,
+      "F1": 0.5882352941176471,
+      "ROC-AUC": 0.9994422132976348,
+      "PR-AUC": 0.8743499555999557,
+      "Balanced-Accuracy": 0.7083333333333334,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 7,
+      "TP": 5,
+      "Threshold": 0.6877050079978839
+    },
+    {
+      "Model": "Ablation: - LSTM",
+      "Precision": 1.0,
+      "Recall": 0.5,
+      "F1": 0.6666666666666666,
+      "ROC-AUC": 0.9995816599732262,
+      "PR-AUC": 0.9026848151848154,
+      "Balanced-Accuracy": 0.75,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 6,
+      "TP": 6,
+      "Threshold": 0.5966230928055754
+    },
+    {
+      "Model": "Ablation: - HGNN",
+      "Precision": 1.0,
+      "Recall": 0.9166666666666666,
+      "F1": 0.9565217391304348,
+      "ROC-AUC": 1.0,
+      "PR-AUC": 1.0,
+      "Balanced-Accuracy": 0.9583333333333331,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 1,
+      "TP": 11,
+      "Threshold": 0.4963554647940558
+    },
+    {
+      "Model": "Ablation: - Federated Training",
+      "Precision": 1.0,
+      "Recall": 0.5,
+      "F1": 0.6666666666666666,
+      "ROC-AUC": 0.9995816599732262,
+      "PR-AUC": 0.9026848151848152,
+      "Balanced-Accuracy": 0.75,
+      "TN": 2988,
+      "FP": 0,
+      "FN": 6,
+      "TP": 6,
+      "Threshold": 0.7343924937412618
+    }
+  ],
+  "temporal_evaluation": [
+    {
+      "Model": "Chronological XGBoost",
+      "Precision": 0.0006673340006673,
+      "Recall": 1.0,
+      "F1": 0.0013337779259753,
+      "ROC-AUC": 1.0,
+      "PR-AUC": 1.0,
+      "Balanced-Accuracy": 0.5005003335557038,
+      "TN": 3,
+      "FP": 2995,
+      "FN": 0,
+      "TP": 2,
+      "Threshold": 0.0091082295402884,
+      "train_rows": 14000,
+      "validation_rows": 3000,
+      "future_test_rows": 3000
+    }
+  ],
+  "robustness_stress_proxies": [
+    {
+      "subset_size": 30,
+      "positive_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "pr_auc": null,
+      "Scenario": "high_value"
+    },
+    {
+      "subset_size": 3000,
+      "positive_count": 12,
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "f1": 0.5,
+      "pr_auc": 0.8847666222666222,
+      "Scenario": "novel_beneficiary"
+    },
+    {
+      "subset_size": 30,
+      "positive_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "pr_auc": null,
+      "Scenario": "extreme_amount_deviation"
+    }
+  ],
+  "federated_vs_centralized": [
+    {
+      "Model": "Federated LSTM",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "ROC-AUC": 0.598086791610888,
+      "PR-AUC": 0.0262084912900918,
+      "Balanced-Accuracy": 0.4994979919678715,
+      "TN": 2985,
+      "FP": 3,
+      "FN": 12,
+      "TP": 0,
+      "Threshold": 0.4774109721183777
+    },
+    {
+      "Model": "Centralized LSTM",
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "ROC-AUC": 0.7380075858991522,
+      "PR-AUC": 0.0464384639542849,
+      "Balanced-Accuracy": 0.4998326639892905,
+      "TN": 2987,
+      "FP": 1,
+      "FN": 12,
+      "TP": 0,
+      "Threshold": 0.8077132105827332
+    }
+  ],
+  "computational_overhead": [
+    {
+      "model": "XGBoost",
+      "training_seconds": 0.3411304000037489,
+      "inference_seconds": 0.0146257000014884,
+      "inference_ms_per_transaction": 0.0024376166669147,
+      "model_bytes": 100738,
+      "feature_dimension": 18,
+      "communication_upload_bytes": null,
+      "communication_download_bytes": null,
+      "communication_total_bytes": null
+    },
+    {
+      "model": "Isolation Forest",
+      "training_seconds": 0.5762944000016432,
+      "inference_seconds": 0.09049309999682,
+      "inference_ms_per_transaction": 0.0150821833328033,
+      "model_bytes": 2029525,
+      "feature_dimension": 18,
+      "communication_upload_bytes": null,
+      "communication_download_bytes": null,
+      "communication_total_bytes": null
+    },
+    {
+      "model": "Federated LSTM",
+      "training_seconds": 6.496698100003414,
+      "inference_seconds": null,
+      "inference_ms_per_transaction": null,
+      "model_bytes": 130466,
+      "feature_dimension": 6,
+      "communication_upload_bytes": 1891260.0,
+      "communication_download_bytes": 1891260.0,
+      "communication_total_bytes": 3782520.0
+    },
+    {
+      "model": "Centralized LSTM",
+      "training_seconds": 5.092989400000079,
+      "inference_seconds": null,
+      "inference_ms_per_transaction": null,
+      "model_bytes": 130498,
+      "feature_dimension": 6,
+      "communication_upload_bytes": null,
+      "communication_download_bytes": null,
+      "communication_total_bytes": null
+    },
+    {
+      "model": "Heterogeneous GNN",
+      "training_seconds": 6.327261500002351,
+      "inference_seconds": 0.085291600000346,
+      "inference_ms_per_transaction": 0.0042645800000173,
+      "model_bytes": 112866,
+      "feature_dimension": 18,
+      "communication_upload_bytes": null,
+      "communication_download_bytes": null,
+      "communication_total_bytes": null
+    }
+  ],
+  "federated_rounds": [
+    {
+      "round": 1,
+      "seconds": 1.818798299995251,
+      "client_sizes": "[42, 13828, 130]",
+      "client_training_seconds": "[0.04124789999332279, 1.7620072999998229, 0.013705999997910112]",
+      "aggregation_seconds": 0.0018331999890506,
+      "upload_bytes": 378252,
+      "download_bytes": 378252,
+      "model_update_bytes": 126084
+    },
+    {
+      "round": 2,
+      "seconds": 1.1248013000003994,
+      "client_sizes": "[42, 13828, 130]",
+      "client_training_seconds": "[0.010671100011677481, 1.0992441999987932, 0.013310700000147335]",
+      "aggregation_seconds": 0.0015566000074613,
+      "upload_bytes": 378252,
+      "download_bytes": 378252,
+      "model_update_bytes": 126084
+    },
+    {
+      "round": 3,
+      "seconds": 1.2422986000019591,
+      "client_sizes": "[42, 13828, 130]",
+      "client_training_seconds": "[0.011456400010501966, 1.2159110000065994, 0.013385600002948195]",
+      "aggregation_seconds": 0.0015261999942595,
+      "upload_bytes": 378252,
+      "download_bytes": 378252,
+      "model_update_bytes": 126084
+    },
+    {
+      "round": 4,
+      "seconds": 1.1604319000034593,
+      "client_sizes": "[42, 13828, 130]",
+      "client_training_seconds": "[0.010837499998160638, 1.1346710000070743, 0.013383299999986775]",
+      "aggregation_seconds": 0.0015198999899439,
+      "upload_bytes": 378252,
+      "download_bytes": 378252,
+      "model_update_bytes": 126084
+    },
+    {
+      "round": 5,
+      "seconds": 1.144022100008442,
+      "client_sizes": "[42, 13828, 130]",
+      "client_training_seconds": "[0.010931800003163517, 1.1184431000001496, 0.01311379999970086]",
+      "aggregation_seconds": 0.0015131999971345,
+      "upload_bytes": 378252,
+      "download_bytes": 378252,
+      "model_update_bytes": 126084
+    }
+  ],
+  "federated_communication": {
+    "upload_bytes": 1891260,
+    "download_bytes": 1891260,
+    "total_bytes": 3782520
+  }
+}

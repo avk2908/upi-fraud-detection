@@ -1,0 +1,14 @@
+seed=42
+nrows=20000
+random_train=0.70
+random_validation=0.15
+random_test=0.15
+fed_clients=3
+fed_rounds=5
+fed_local_epochs=1
+fed_dirichlet_alpha=0.30
+lstm_sequence_length=5
+hgnn_hidden=32
+hgnn_heads=2
+hgnn_epochs=30
+federated_upload_bytes=1891260

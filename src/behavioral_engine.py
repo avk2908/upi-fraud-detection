@@ -1,89 +1,96 @@
+import os
+import joblib
 import numpy as np
 import pandas as pd
 import xgboost as xgb
+import time
+
 from sklearn.ensemble import IsolationForest
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import (
-    classification_report, roc_auc_score, average_precision_score,
-    confusion_matrix
-)
-from imblearn.over_sampling import SMOTE
-import joblib
-import os
+from sklearn.preprocessing import MinMaxScaler
 
-from src.preprocess import get_feature_cols
+from src.preprocess import get_feature_cols, get_model_matrix
 
-def train_behavioral_engine(df: pd.DataFrame, model_dir: str = "models"):
+
+def train_behavioral_engine(
+    df: pd.DataFrame,
+    train_idx=None,
+    test_idx=None,
+    val_idx=None,
+    model_dir: str = "models",
+    seed: int = 42,
+):
+    """
+    Train XGBoost + Isolation Forest on an explicitly supplied split.
+
+    This is important for the paper: every model must use the same held-out
+    test transactions.
+    """
     os.makedirs(model_dir, exist_ok=True)
-    FEATURES = get_feature_cols()
-    X = df[FEATURES].fillna(0)
-    y = df["isFraud"]
+    features = get_feature_cols()
+    X = get_model_matrix(df)
+    y = df["isFraud"].astype(int)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
-    )
+    if train_idx is None or test_idx is None:
+        raise ValueError(
+            "Pass explicit train_idx and test_idx so the experiment uses "
+            "one identical split across models."
+        )
 
-    # --- Handle class imbalance with SMOTE ---
-    print("[Phase 2] Applying SMOTE for class balance...")
-    sm = SMOTE(random_state=42, k_neighbors=3)
-    X_res, y_res = sm.fit_resample(X_train, y_train)
+    X_train = X.iloc[train_idx]
+    X_test = X.iloc[test_idx]
+    y_train = y.iloc[train_idx]
+    y_test = y.iloc[test_idx]
 
-    # --- XGBoost ---
+    # Use class weighting on the untouched training partition. Keeping sample
+    # IDs intact is important for matched comparisons and auditable splits.
+
     print("[Phase 2] Training XGBoost...")
-    scale_pos = (y_train == 0).sum() / (y_train == 1).sum()
-    xgb_model = xgb.XGBClassifier(
+    scale_pos = (y_train == 0).sum() / max((y_train == 1).sum(), 1)
+    model = xgb.XGBClassifier(
         n_estimators=80,
         max_depth=4,
         learning_rate=0.05,
         scale_pos_weight=scale_pos,
-        use_label_encoder=False,
         eval_metric="aucpr",
-        random_state=42,
-        n_jobs=-1
+        random_state=seed,
+        n_jobs=1,
     )
-    xgb_model.fit(
-        X_res, y_res,
-        eval_set=[(X_test, y_test)],
-        verbose=50
-    )
+    start = time.perf_counter()
+    eval_set = None
+    if val_idx is not None:
+        eval_set = [(X.iloc[val_idx], y.iloc[val_idx])]
+    model.fit(X_train, y_train, eval_set=eval_set, verbose=False)
+    model.training_seconds_ = time.perf_counter() - start
 
-    # --- Isolation Forest (unsupervised anomaly layer) ---
     print("[Phase 2] Training Isolation Forest...")
-    iso_forest = IsolationForest(
+    iso = IsolationForest(
         n_estimators=200,
         contamination=0.02,
-        random_state=42,
-        n_jobs=-1
+        random_state=seed,
+        n_jobs=1,
     )
-    iso_forest.fit(X_res)
+    start = time.perf_counter()
+    iso.fit(X_train)
+    iso.training_seconds_ = time.perf_counter() - start
 
-    # --- Evaluate ---
-    xgb_proba = xgb_model.predict_proba(X_test)[:, 1]
-    iso_scores = -iso_forest.score_samples(X_test)  # higher = more anomalous
-    # Normalize iso scores to [0,1]
-    iso_norm = (iso_scores - iso_scores.min()) / (iso_scores.max() - iso_scores.min() + 1e-9)
+    anomaly_scaler = MinMaxScaler(clip=True).fit((-iso.score_samples(X_train)).reshape(-1, 1))
 
-    print("\n[Phase 2] XGBoost Evaluation:")
-    print(classification_report(y_test, (xgb_proba > 0.5).astype(int)))
-    print(f"ROC-AUC: {roc_auc_score(y_test, xgb_proba):.4f}")
-    print(f"PR-AUC:  {average_precision_score(y_test, xgb_proba):.4f}")
+    joblib.dump(model, f"{model_dir}/xgb_model.pkl")
+    joblib.dump(iso, f"{model_dir}/iso_forest.pkl")
+    joblib.dump(anomaly_scaler, f"{model_dir}/iso_scaler.pkl")
 
-    # Save
-    joblib.dump(xgb_model, f"{model_dir}/xgb_model.pkl")
-    joblib.dump(iso_forest, f"{model_dir}/iso_forest.pkl")
-    print("[Phase 2] Models saved.")
-
-    return xgb_model, iso_forest, X_test, y_test
+    return model, iso, X_train, X_test, y_train, y_test
 
 
-def load_behavioral_engine(model_dir: str = "models"):
-    xgb_model = joblib.load(f"{model_dir}/xgb_model.pkl")
-    iso_forest = joblib.load(f"{model_dir}/iso_forest.pkl")
-    return xgb_model, iso_forest
+def load_behavioral_engine(model_dir="models"):
+    return (
+        joblib.load(f"{model_dir}/xgb_model.pkl"),
+        joblib.load(f"{model_dir}/iso_forest.pkl"),
+    )
 
 
-def get_behavioral_scores(xgb_model, iso_forest, X: pd.DataFrame):
-    xgb_proba = xgb_model.predict_proba(X)[:, 1]
-    iso_raw = -iso_forest.score_samples(X)
-    iso_norm = (iso_raw - iso_raw.min()) / (iso_raw.max() - iso_raw.min() + 1e-9)
-    return xgb_proba, iso_norm
+def get_behavioral_scores(xgb_model, iso_forest, X):
+    xgb_scores = xgb_model.predict_proba(X)[:, 1]
+    raw = -iso_forest.score_samples(X)
+    iso_scores = (raw - raw.min()) / (raw.max() - raw.min() + 1e-9)
+    return xgb_scores, iso_scores

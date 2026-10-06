@@ -1,0 +1,4 @@
+split,rows,legitimate,fraud,post_balance_legitimate,post_balance_fraud,imbalance_strategy
+train,14000,13943,57,13943,57,class weights; no resampling
+validation,3000,2988,12,2988,12,class weights; no resampling
+test,3000,2988,12,2988,12,class weights; no resampling

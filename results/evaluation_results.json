@@ -1,0 +1,16 @@
+[
+  {
+    "Model":"Full: XGB + IF + LSTM(FedAvg) + HGNN",
+    "Precision":1.0,
+    "Recall":0.3333333333,
+    "F1":0.5,
+    "ROC-AUC":0.9994701026,
+    "PR-AUC":0.8847666223,
+    "Balanced-Accuracy":0.6666666667,
+    "TN":2988,
+    "FP":0,
+    "FN":8,
+    "TP":4,
+    "Threshold":0.7118334992
+  }
+]

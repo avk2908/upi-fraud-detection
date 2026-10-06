@@ -1,0 +1,6 @@
+model,training_seconds,inference_seconds,inference_ms_per_transaction,model_bytes,feature_dimension,communication_upload_bytes,communication_download_bytes,communication_total_bytes
+XGBoost,0.3411304000037489,0.0146257000014884,0.0024376166669147,100738,18,,,
+Isolation Forest,0.5762944000016432,0.09049309999682,0.0150821833328033,2029525,18,,,
+Federated LSTM,6.496698100003414,,,130466,6,1891260.0,1891260.0,3782520.0
+Centralized LSTM,5.092989400000079,,,130498,6,,,
+Heterogeneous GNN,6.327261500002351,0.085291600000346,0.0042645800000173,112866,18,,,

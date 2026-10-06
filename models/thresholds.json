@@ -1,0 +1,9 @@
+{
+  "decision_threshold": 0.7118334991725848,
+  "selection_split": "validation",
+  "risk_levels": {
+    "medium": 0.35,
+    "high": 0.65,
+    "critical": 0.9
+  }
+}

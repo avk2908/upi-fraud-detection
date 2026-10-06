@@ -1,0 +1,3 @@
+Paper consistency scan (candidate statements require human review)
+
+No candidate wording found.
